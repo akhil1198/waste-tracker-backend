@@ -2,8 +2,8 @@ const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
 const router = require('./routes/index.js');
-const errorHandler = require('./middleware/errorHandler.js')
-const logger = require('./utils/logger.js')
+const errorHandler = require('../middleware/errorHandler.js')
+const logger = require('../utils/logger.js')
 const mealAPI = require('./routes/mealAPI.js')
 const metricsAPI = require('./routes/metricsAPI.js')
 const sqlite3 = require('sqlite3')
@@ -41,15 +41,15 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 //routes
-app.use('waste-tracker-backend-phi.vercel.app/api', mealAPI())
-app.use('waste-tracker-backend-phi.vercel.app/api', metricsAPI())
+app.use('/api', mealAPI())
+app.use('/api', metricsAPI())
 
 // Health check endpoint
-app.get('waste-tracker-backend-phi.vercel.app/api/health', (req, res) => {
+app.get('/api/health', (req, res) => {
     res.json({ status: 'Server is running' });
 });
 
-app.get('waste-tracker-backend-phi.vercel.app/', (req, res) => {
+app.get('/', (req, res) => {
     res.send('Welcome to the Meal-Waste Tracking Application server!');
 });
 
