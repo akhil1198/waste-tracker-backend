@@ -41,15 +41,15 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 //routes
-app.use('/api', mealAPI())
-app.use('/api', metricsAPI())
+app.use('waste-tracker-backend-phi.vercel.app/api', mealAPI())
+app.use('waste-tracker-backend-phi.vercel.app/api', metricsAPI())
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('waste-tracker-backend-phi.vercel.app/api/health', (req, res) => {
     res.json({ status: 'Server is running' });
 });
 
-app.get('/', (req, res) => {
+app.get('waste-tracker-backend-phi.vercel.app/', (req, res) => {
     res.send('Welcome to the Meal-Waste Tracking Application server!');
 });
 
