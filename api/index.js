@@ -12,12 +12,6 @@ AWS.config.update({
     region: 'us-east-1'
 });
 
-const s3 = new AWS.S3({
-    accessKeyId: process.env.ACCESS_KEY,
-    secretAccessKey: process.env.SECRETACCESSKEY,
-    region: 'us-east-1'
-});
-
 // Create a DynamoDB DocumentClient instance
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
@@ -44,7 +38,8 @@ async function getRecords(tableName) {
 
     try {
         const data = await dynamoDB.scan(params).promise();
-        return data.Items
+        console.log(data)
+        return data
     } catch (error) {
         console.error('Error updating DynamoDB:', error);
         throw new Error('DynamoDB update failed');
@@ -63,12 +58,11 @@ async function submitRecords(params) {
 }
 
 
-app.get("/api/records", (req, res) => {
+app.get("/api/records", async (req, res) => {
 
     try {
-
-        const data = getRecords('mealwastetracker')
-        res.status(200).json({ message: "Fetched records successfully", data });
+        const data = await getRecords('mealwastetracker')
+        res.status(200).json(data.Items);
 
     } catch (err) {
         console.error('Error fetching records:', err);
