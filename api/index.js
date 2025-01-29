@@ -18,7 +18,7 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const app = express()
 
 app.use(cors({
-    origin: process.env.frontend_url || 'http://localhost:3000'
+    origin: process.env.frontend_url || 'https://meal-waste-tracking-client-th1d.vercel.app/'
 }))
 
 //Body parsing middleware
