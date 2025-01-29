@@ -1,3 +1,15 @@
-export default function handler(req, res) {
-    res.status(200).send('Welcome to the Meal-Waste Tracking Application server!');
-}
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+app.get("/api/records", (req, res) => {
+    res.json({ message: "Records endpoint" });
+});
+
+app.post("/api/submit-order", (req, res) => {
+    res.json({ message: "Order submitted" });
+});
+
+// Export the app as a serverless function
+module.exports = app;
