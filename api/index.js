@@ -1,14 +1,120 @@
-const express = require("express");
-const app = express();
+const express = require('express')
+const cors = require('cors')
+const dotenv = require('dotenv')
+const router = require('./routes/index.js');
+const errorHandler = require('./middleware/errorHandler.js')
+const logger = require('./utils/logger.js')
+const mealAPI = require('./routes/mealAPI.js')
+const metricsAPI = require('./routes/metricsAPI.js')
+const sqlite3 = require('sqlite3')
+const AWS = require('aws-sdk')
+const fs = require('fs');
+const path = require('path');
+const cron = require('node-cron');
+
+dotenv.config()
+
+// Configure the SDK with your AWS region
+AWS.config.update({
+    accessKeyId: process.env.ACCESS_KEY,
+    secretAccessKey: process.env.SECRETACCESSKEY,
+    region: 'us-east-1'
+});
+
+const s3 = new AWS.S3({
+    accessKeyId: process.env.ACCESS_KEY,
+    secretAccessKey: process.env.SECRETACCESSKEY,
+    region: 'us-east-1'
+});
+
+// Create a DynamoDB DocumentClient instance
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
+
+const app = express()
+
+app.use(cors({
+    origin: process.env.frontend_url || 'http://localhost:3000'
+}))
+
+//Body parsing middleware
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+//routes
+app.use('/api', mealAPI())
+app.use('/api', metricsAPI())
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'Server is running' });
+});
+
+app.get('/', (req, res) => {
+    res.send('Welcome to the Meal-Waste Tracking Application server!');
+});
+
+async function updateDynamoDB(tableName, data) {
+    const params = {
+        TableName: tableName,
+        Item: data,
+    };
+
+    try {
+        await dynamoDB.put(params).promise();
+    } catch (error) {
+        console.error('Error updating DynamoDB:', error);
+        throw new Error('DynamoDB update failed');
+    }
+}
+
+
 
 app.use(express.json());
 
 app.get("/api/records", (req, res) => {
+    const params = {
+        TableName: 'mealwastetracker',
+        ScanIndexForward: false,
+    };
+
+    try {
+        const data = dynamoDB.scan(params).promise();
+        res.status(200).send("hello from records");
+    } catch (err) {
+        console.error('Error fetching records:', err);
+        res.status(500).json({ error: 'Failed to fetch records' });
+    }
     res.json({ message: "Records endpoint" });
 });
 
 app.post("/api/submit-order", (req, res) => {
-    res.json({ message: "Order submitted" });
+    const { id, mealType, quantity, date } = req.body.data;
+
+    if (!mealType || !quantity || !date) {
+        res.status(400).json({ error: 'All fields are required!' });
+        return;
+    }
+
+    const data = {
+        mealType,
+        quantity,
+        date,
+        id,
+    };
+
+    const params = {
+        TableName: 'mealwastetracker',
+        Item: data,
+    };
+
+    try {
+        dynamoDB.put(params).promise();
+        console.log('Data inserted in DynamoDB', data);
+        res.status(200).json({ message: 'Data inserted successfully', data: params.Item });
+    } catch (error) {
+        console.error('Error updating DynamoDB:', error);
+        res.status(500).json({ error: 'Failed to insert data' });
+    }
 });
 
 // Export the app as a serverless function
